@@ -33,3 +33,61 @@ find_datasources = func(type) {
   return datasources
 }
 
+### filter_attribute_contains_items_not_in_list ###
+# Filter a list of resources to those with a specified
+# attribute (attr) that contains items not in a given list of allowed values.
+# Resources should be derived by applying filters to tfstate.resources.
+# Set prtmsg to `true` (without quotes) if you want to print violation messages.
+# If you want to allow null, include "null" in the list (allowed).
+filter_attribute_contains_items_not_in_list = func(resources, attr, allowed, prtmsg) {
+  violators = {}
+	messages = {}
+  for resources as address, r {
+    # Evaluate the value (vals) of the attribute
+    vals = evaluate_attribute(r, attr) else null
+    # Check if the value contains items not in allowed list
+    if not (types.type_of(vals) is "list" or types.type_of(vals) is "map" or
+            types.type_of(vals) is "null") {
+        # Add the resource and a warning message to the violators list
+        message = to_string(address) + " has " + to_string(attr) + " " +
+                  to_string(vals) + " that is not a map, a list, or null"
+        violators[address] = r
+        messages[address] = message
+        if prtmsg {
+          print(message)
+        }
+    } else if vals is null {
+      if "null" not in allowed {
+        # Add the resource and a warning message to the violators list
+        message = to_string(address) + " has " + to_string(attr) +
+                  " with value null " + "that is not in the allowed list: " +
+                  to_string(allowed)
+        violators[address] = r
+        messages[address] = message
+        if prtmsg {
+          print(message)
+        }
+      }
+    } else {
+      forbidden_values = []
+      for vals as v {
+        if v not in allowed {
+          append(forbidden_values, v)
+        } // end if v not allowed
+      } // end for vals
+      if length(forbidden_values) > 0 {
+        # Build warning message when vals is a map
+        message = to_string(address) + " has " + to_string(attr) + " " +
+                  to_string(vals) + " with items " + to_string(forbidden_values) +
+                  " that are not in the allowed list: " + to_string(allowed)
+        # Add the resource and a warning message to the violators list
+        violators[address] = r
+				messages[address] = message
+        if prtmsg {
+          print(message)
+        }
+      } // end length(forbidden_values)
+    } // end if null
+  } // end for
+  return {"items":violators,"messages":messages}
+}
