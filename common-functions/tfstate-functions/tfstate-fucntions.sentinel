@@ -1,0 +1,35 @@
+
+   
+# Common functions that use the tfstate/v2 import
+
+# The filter functions all accept a collection of resources, an attribute,
+# a value or a list of values, and a boolean, prtmsg, which can be true or false
+# and indicates whether the filter function should print violation messages.
+# The filter functions return a map consisting of 2 items:
+#   * "resources": a map consisting of resources that violate a condition
+#   * "messages":  a map of violation messages associated with the resources
+# Note that both the resources and messages collections are indexed by the
+# address of the resources, so they will have the same order and length.
+# The filter functions all call evaluate_attribute() to evaluate attributes
+# of resources even if nested deep within them.
+
+##### Imports #####
+import "tfstate/v2" as tfstate
+import "strings"
+import "types"
+
+##### Functions #####
+
+
+
+### find_datasources ###
+# Find all data sources of a specific type using the tfstate/v2 import.
+find_datasources = func(type) {
+  datasources = filter tfstate.resources as address, d {
+  	d.type is type and
+  	d.mode is "data"
+  }
+
+  return datasources
+}
+
