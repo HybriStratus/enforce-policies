@@ -1,0 +1,30 @@
+# This policy uses sentinel tfplan/v2 to check the helm_release_version that will be  deployed 
+# Version shoule be 3.29.0
+
+import "tfplan/v2" as tfplan
+
+
+find_helm_version = func() {
+    helm_version = filter tfplan.planned_values.resources as _, rc {
+        rc.module_address is "module.argocd" and 
+          rc.mode is "managed" and 
+            rc.type is "helm_release" and 
+              rc.values is not null 
+        }
+    version = []
+    for helm_version as _, vc {
+        append(version, vc.values.version)
+    }
+    for version as v {
+        if v is not "3.29.0" {
+            msg = "Current helm release version is " + to_string(v) + " and does not match 3.29.0"
+            print(msg)
+            return false
+        }
+    }
+    return true
+}
+
+main = rule {
+   find_helm_version()
+}

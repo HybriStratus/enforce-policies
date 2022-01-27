@@ -1,0 +1,34 @@
+# This policy uses sentinel tfplan/v2 to check the eks_version that will be  deployed 
+# Any version that matches 1.1* or 1.2* is a pass
+
+import "tfplan/v2" as tfplan
+
+
+find_eks_version = func() {
+    eks_version = filter tfplan.planned_values.resources as _, rc {
+        rc.module_address is "module.eks" and 
+          rc.mode is "managed" and 
+            rc.type is "aws_eks_cluster" and 
+              rc.values is not null 
+        }
+    version = []
+    for eks_version as _, vc {
+        append(version, vc.values.version)
+    }
+    for version as v {
+        if v not matches "1\\.[12][0-9]+$" {
+            msg = "Current EKS version to be deployed is " + to_string(v) + " which doesnt match the regex 1\\.[12][0-9]+$"
+            print(msg)
+            return false
+        }
+        
+    }
+    return true
+
+}
+
+
+
+main = rule {
+   find_eks_version()
+}
