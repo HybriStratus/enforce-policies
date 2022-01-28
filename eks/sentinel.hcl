@@ -25,3 +25,7 @@ policy "restrict-ingress-sg-rules-cidr-blocks" {
 policy "restrict-ingress-sg-rule-ssh" {
     enforcement_level = "soft-mandatory"
 }
+
+policy "restrict-subnet-availability-zone" {
+    enforcement_level = "soft-mandatory"
+}
