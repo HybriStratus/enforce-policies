@@ -6,9 +6,9 @@ module "tfplan-functions" {
   source = "../common-functions/tfplan-functions/tfplan-functions.sentinel"
 } 
 
-policy "less-than-100-month" {
-  enforcement_level = "soft-mandatory"
-}
+#policy "less-than-100-month" {
+# enforcement_level = "soft-mandatory"
+#}
 
 policy "restrict-ami-owners" {
   enforcement_level = "soft-mandatory"
